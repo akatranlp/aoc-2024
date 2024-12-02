@@ -33,6 +33,43 @@ func Map[T, K any](seq iter.Seq[T], f func(T) K) iter.Seq[K] {
 	}
 }
 
+type PredicateFunc[T any] func(T) bool
+
+var FilterEmptyLines PredicateFunc[string] = func(row string) bool { return row != "" }
+
+func Filter[T any](seq iter.Seq[T], predicate PredicateFunc[T]) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for v := range seq {
+			if !predicate(v) {
+				continue
+			}
+			if !yield(v) {
+				return
+			}
+		}
+	}
+}
+
+func Filter2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc[V]) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		for k, v := range seq {
+			if !predicate(v) {
+				continue
+			}
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
+func Reduce[T, K any](seq iter.Seq[T], acc K, reduceFunc func(acc K, value T) K) K {
+	for v := range seq {
+		acc = reduceFunc(acc, v)
+	}
+	return acc
+}
+
 func RemoveIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
 }
