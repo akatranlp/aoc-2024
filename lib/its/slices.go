@@ -22,3 +22,13 @@ func Zip[T, K any](seq1 iter.Seq[T], seq2 iter.Seq[K]) iter.Seq2[T, K] {
 		}
 	}
 }
+
+func Map[T, K any](seq iter.Seq[T], f func(T) K) iter.Seq[K] {
+	return func(yield func(K) bool) {
+		for v := range seq {
+			if !yield(f(v)) {
+				return
+			}
+		}
+	}
+}
