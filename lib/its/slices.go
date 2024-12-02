@@ -32,3 +32,7 @@ func Map[T, K any](seq iter.Seq[T], f func(T) K) iter.Seq[K] {
 		}
 	}
 }
+
+func RemoveIndex[T any](slice []T, index int) []T {
+	return append(slice[:index], slice[index+1:]...)
+}

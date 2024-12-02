@@ -10,17 +10,18 @@ import (
 	"strings"
 )
 
+type Order int
+
 const (
-	ASC = iota
+	UNKNOWN Order = iota
+	ASC
 	DESC
-	UNKNOWN
 )
 
 func main() {
 	reports := make([][]int, 0)
 	fs.ApplyToLines("day2/input.txt", func(msg string) {
 		values := strings.Split(msg, " ")
-		fmt.Println(values)
 		seq := slices.Values(values)
 		numbers := its.Map(seq, func(s string) int {
 			return utils.Must(strconv.Atoi(s))
@@ -30,38 +31,48 @@ func main() {
 
 	sum := 0
 	for _, list := range reports {
-		worked := true
-		strict := UNKNOWN
-		var value1, value2 int
-		for i := range list {
-			j := i + 1
-			if j == len(list) {
+		someWorked := false
+		for removeIndex := range list {
+			worked := true
+			strict := UNKNOWN
+			newList := make([]int, len(list))
+			copy(newList, list)
+			newList = its.RemoveIndex(newList, removeIndex)
+			for i := range newList {
+				j := i + 1
+				if j == len(newList) {
+					break
+				}
+				value1, value2 := newList[i], newList[j]
+				asc1 := value1-value2 < 0
+				if strict == UNKNOWN {
+					if asc1 {
+						strict = ASC
+					} else {
+						strict = DESC
+					}
+				} else {
+					if asc1 && strict == DESC {
+						worked = false
+						break
+					} else if !asc1 && strict == ASC {
+						worked = false
+						break
+					}
+				}
+
+				difference := utils.IntAbs(value1, value2)
+				if difference < 1 || difference > 3 {
+					worked = false
+					break
+				}
+			}
+			if worked {
+				someWorked = true
 				break
 			}
-			value1, value2 = list[i], list[j]
-			asc := value1-value2 < 0
-			if strict == UNKNOWN {
-				if asc {
-					strict = ASC
-				} else {
-					strict = DESC
-				}
-			} else {
-				if asc && strict == DESC {
-					worked = false
-					break
-				} else if !asc && strict == ASC {
-					worked = false
-					break
-				}
-			}
-
-			difference := utils.IntAbs(value1, value2)
-			if difference < 1 || difference > 3 {
-				worked = false
-			}
 		}
-		if worked {
+		if someWorked {
 			sum += 1
 		}
 	}
