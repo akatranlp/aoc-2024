@@ -3,5 +3,6 @@ go 1.23
 use (
 	./day1
 	./day2
+	./day3
 	./lib
 )
