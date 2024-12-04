@@ -3,7 +3,6 @@ package main
 import (
 	"aoc-lib/aoc"
 	"aoc-lib/its"
-	"fmt"
 	"io"
 )
 
@@ -71,7 +70,55 @@ func (d *Day4) Part1(r io.Reader) int {
 	return count
 }
 
-func (*Day4) Part2(r io.Reader) int {
-	fmt.Println("Part2 not implemented")
-	return -1
+func (d *Day4) checkX(row, col int) bool {
+	{
+		newRow1 := row - 1
+		newCol1 := col - 1
+		newRow2 := row + 1
+		newCol2 := col + 1
+		if !d.inBounce(newRow1, newCol1) || !d.inBounce(newRow2, newCol2) {
+			return false
+		}
+		char1 := d.wordMap[newRow1][newCol1]
+		char2 := d.wordMap[newRow2][newCol2]
+		if !(char1 == 'M' && char2 == 'S') && !(char1 == 'S' && char2 == 'M') {
+			return false
+		}
+	}
+	{
+		newRow1 := row + 1
+		newCol1 := col - 1
+		newRow2 := row - 1
+		newCol2 := col + 1
+		if !d.inBounce(newRow1, newCol1) || !d.inBounce(newRow2, newCol2) {
+			return false
+		}
+		char1 := d.wordMap[newRow1][newCol1]
+		char2 := d.wordMap[newRow2][newCol2]
+		if !(char1 == 'M' && char2 == 'S') && !(char1 == 'S' && char2 == 'M') {
+			return false
+		}
+	}
+	return true
+}
+
+func (d *Day4) Part2(r io.Reader) int {
+	d.wordMap = make([]string, 0)
+	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+		d.wordMap = append(d.wordMap, row)
+	}
+	var count int
+
+	for i := range d.wordMap {
+		for j := range d.wordMap[i] {
+			element := d.wordMap[i][j]
+			if element == 'A' {
+				if d.checkX(i, j) {
+					count++
+				}
+			}
+		}
+	}
+
+	return count
 }
