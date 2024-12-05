@@ -1,6 +1,9 @@
 package its
 
-import "iter"
+import (
+	"iter"
+	"slices"
+)
 
 func Zip[T, K any](seq1 iter.Seq[T], seq2 iter.Seq[K]) iter.Seq2[T, K] {
 	return func(yield func(T, K) bool) {
@@ -33,6 +36,10 @@ func Map[T, K any](seq iter.Seq[T], f func(T) K) iter.Seq[K] {
 	}
 }
 
+func MapSlice[T, K any](seq []T, f func(T) K) []K {
+	return slices.Collect(Map(slices.Values(seq), f))
+}
+
 type PredicateFunc[T any] func(T) bool
 
 var FilterEmptyLines PredicateFunc[string] = func(row string) bool { return row != "" }
@@ -61,6 +68,15 @@ func Filter2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc[V]) iter.Seq
 			}
 		}
 	}
+}
+
+func All[T any](slice []T, predicate PredicateFunc[T]) bool {
+	for _, e := range slice {
+		if !predicate(e) {
+			return false
+		}
+	}
+	return true
 }
 
 func Reduce[T, K any](seq iter.Seq[T], acc K, reduceFunc func(acc K, value T) K) K {
