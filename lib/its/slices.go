@@ -70,8 +70,8 @@ func Filter2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc[V]) iter.Seq
 	}
 }
 
-func All[T any](slice []T, predicate PredicateFunc[T]) bool {
-	for _, e := range slice {
+func All[T any](seq iter.Seq[T], predicate PredicateFunc[T]) bool {
+	for e := range seq {
 		if !predicate(e) {
 			return false
 		}
