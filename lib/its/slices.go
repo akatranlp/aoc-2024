@@ -26,10 +26,115 @@ func Zip[T, K any](seq1 iter.Seq[T], seq2 iter.Seq[K]) iter.Seq2[T, K] {
 	}
 }
 
+func ZipSlices[T, K any](slice1 []T, slice2 []K) iter.Seq2[T, K] {
+	length := max(len(slice1), len(slice2))
+	return func(yield func(T, K) bool) {
+		for i := range length {
+			if !yield(slice1[i], slice2[i]) {
+				return
+			}
+		}
+	}
+}
+
+type iterPuller[T any] struct {
+	next  func() (T, bool)
+	value T
+}
+
+func (i *iterPuller[T]) Next() bool {
+	v, ok := i.next()
+	i.value = v
+	return ok
+}
+
+func (i *iterPuller[T]) Value() T {
+	return i.value
+}
+
+func PullFromIter[T any](next func() (T, bool)) *iterPuller[T] {
+	return &iterPuller[T]{next: next}
+}
+
+type Combination[T any] struct {
+	L, R T
+}
+
+func AllCombinations[T any](slice []T, includeSelf bool) iter.Seq[Combination[T]] {
+	return func(yield func(Combination[T]) bool) {
+		for i := range len(slice) {
+			start := i
+			if !includeSelf {
+				start += 1
+			}
+			for j := start; j < len(slice); j++ {
+				if !yield(Combination[T]{slice[i], slice[j]}) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func Window[T any](seq iter.Seq[T], n int) iter.Seq[[]T] {
+	window := make([]T, 0)
+	return func(yield func([]T) bool) {
+		next, stop := iter.Pull(seq)
+		defer stop()
+		for range n {
+			v, ok := next()
+			if !ok {
+				yield(window)
+				return
+			}
+			window = append(window, v)
+		}
+		ip := PullFromIter(next)
+		for ip.Next() {
+			window = append(window[1:], ip.value)
+			if !yield(window) {
+				return
+			}
+		}
+	}
+}
+
+func Window2[T any](seq iter.Seq[T]) iter.Seq2[T, T] {
+	return func(yield func(T, T) bool) {
+		next, stop := iter.Pull(seq)
+		defer stop()
+		var first, second T
+		var ok bool
+		second, ok = next()
+		if !ok {
+			return
+		}
+
+		ip := PullFromIter(next)
+		for ip.Next() {
+			first = second
+			second = ip.value
+			if !yield(first, second) {
+				return
+			}
+		}
+	}
+}
+
 func Map[T, K any](seq iter.Seq[T], f func(T) K) iter.Seq[K] {
 	return func(yield func(K) bool) {
 		for v := range seq {
 			if !yield(f(v)) {
+				return
+			}
+		}
+	}
+}
+
+func Map2[K, V, T any](seq iter.Seq2[K, V], f func(K, V) T) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for k, v := range seq {
+			if !yield(f(k, v)) {
 				return
 			}
 		}
@@ -73,6 +178,17 @@ func Filter2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc[V]) iter.Seq
 func All[T any](seq iter.Seq[T], predicate PredicateFunc[T]) bool {
 	for e := range seq {
 		if !predicate(e) {
+			return false
+		}
+	}
+	return true
+}
+
+type PredicateFunc2[K, V any] func(k K, v V) bool
+
+func All2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc2[K, V]) bool {
+	for k, v := range seq {
+		if !predicate(k, v) {
 			return false
 		}
 	}
