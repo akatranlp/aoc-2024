@@ -6,6 +6,7 @@ import (
 	"aoc-lib/slices"
 	"fmt"
 	"io"
+	"maps"
 	"math"
 )
 
@@ -20,8 +21,8 @@ func (v *Vector2) RotateClockwise() *Vector2 {
 }
 
 type Player struct {
-	pos       *Vector2
-	direction *Vector2
+	pos       Vector2
+	direction Vector2
 }
 
 func (p *Player) RotateClockwise() {
@@ -69,8 +70,8 @@ func (*Day6) Part1(r io.Reader) int {
 	for y, row := range map2d {
 		for x, char := range row {
 			if char == '^' {
-				player.pos = &Vector2{x, y}
-				player.direction = &Vector2{0, -1}
+				player.pos = Vector2{x, y}
+				player.direction = Vector2{0, -1}
 			}
 			if char == '#' {
 				obstacleSet.Set(Vector2{x, y})
@@ -79,7 +80,7 @@ func (*Day6) Part1(r io.Reader) int {
 	}
 
 	steppedSet := make(slices.Set[Vector2])
-	steppedSet.Set(*player.pos)
+	steppedSet.Set(player.pos)
 
 	for inBounce(rows, cols, player) {
 		newPos := player.PeekStep()
@@ -91,7 +92,7 @@ func (*Day6) Part1(r io.Reader) int {
 			}
 		}
 		player.Step()
-		steppedSet.Set(*player.pos)
+		steppedSet.Set(player.pos)
 	}
 
 	for y, row := range map2d {
@@ -112,6 +113,106 @@ func (*Day6) Part1(r io.Reader) int {
 }
 
 func (*Day6) Part2(r io.Reader) int {
-	fmt.Println("Part2 not implemented")
-	return -1
+	obstacleSet := make(slices.Set[Vector2])
+	map2d := make([][]byte, 0)
+	var player Player
+
+	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+		map2d = append(map2d, []byte(row))
+	}
+	rows := len(map2d)
+	cols := len(map2d[0])
+
+	for y, row := range map2d {
+		for x, char := range row {
+			if char == '^' {
+				player.pos = Vector2{x, y}
+				player.direction = Vector2{0, -1}
+			}
+			if char == '#' {
+				obstacleSet.Set(Vector2{x, y})
+			}
+		}
+	}
+
+	playerSteps := make([]Vector2, 0)
+
+	testPlayer := Player{pos: player.pos, direction: player.direction}
+	for inBounce(rows, cols, testPlayer) {
+		newPos := testPlayer.PeekStep()
+		if obstacleSet.Has(newPos) {
+			testPlayer.RotateClockwise()
+			newPos = testPlayer.PeekStep()
+			if obstacleSet.Has(newPos) {
+				testPlayer.RotateClockwise()
+			}
+		}
+		testPlayer.Step()
+		playerSteps = append(playerSteps, testPlayer.pos)
+	}
+
+	obstacleTestSet := slices.NewSet[Vector2]()
+
+	var count int
+	for i, v := range playerSteps {
+		if i == len(playerSteps)-1 {
+			continue
+		}
+		if obstacleTestSet.Has(v) {
+			continue
+		}
+		obstacleTestSet.Set(v)
+		newObstacles := maps.Clone(obstacleSet)
+		newObstacles.Set(v)
+
+		if testForLoop(map2d, player, rows, cols, newObstacles) {
+			count += 1
+		}
+	}
+
+	return count
+}
+
+func testForLoop(map2d [][]byte, p Player, rows, cols int, obstacles slices.Set[Vector2]) bool {
+	loopDetectionSet := slices.NewSet[Player]()
+	steppedSet := make(slices.Set[Vector2])
+	steppedSet.Set(p.pos)
+
+	for inBounce(rows, cols, p) {
+		newPos := p.PeekStep()
+		if obstacles.Has(newPos) {
+			p.RotateClockwise()
+			newPos = p.PeekStep()
+			if obstacles.Has(newPos) {
+				p.RotateClockwise()
+			}
+		}
+		p.Step()
+		steppedSet.Set(p.pos)
+		if loopDetectionSet.Has(p) {
+			// PrintMap(map2d, steppedSet, obstacles)
+			// var s string
+			// fmt.Scanln(&s)
+			return true
+		}
+		loopDetectionSet.Set(p)
+	}
+
+	return false
+}
+
+func PrintMap(map2d [][]byte, steppedSet slices.Set[Vector2], obstacles slices.Set[Vector2]) {
+	for y, row := range map2d {
+		for x := range row {
+			pos := Vector2{x, y}
+			if steppedSet.Has(pos) {
+				fmt.Print("X")
+			} else if obstacles.Has(pos) {
+				fmt.Print("#")
+			} else {
+				fmt.Print(".")
+			}
+		}
+		fmt.Println()
+	}
 }

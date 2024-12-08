@@ -34,7 +34,7 @@ func TestDay6(t *testing.T) {
 	t.Run("part 2", func(t *testing.T) {
 		input := bytes.NewBufferString(part1Test)
 
-		expected := -1
+		expected := 6
 		actual := day6.Part2(input)
 
 		if expected != actual {
@@ -45,28 +45,28 @@ func TestDay6(t *testing.T) {
 
 func TestPlayer(t *testing.T) {
 	t.Run("Rotate Clockwise", func(t *testing.T) {
-		player := Player{direction: &Vector2{0, -1}}
+		player := Player{direction: Vector2{0, -1}}
 		expected := Vector2{1, 0}
 		player.RotateClockwise()
-		if *player.direction != expected {
+		if player.direction != expected {
 			t.Fatalf("ERROR: expected %d actual %d\n", expected, player.direction)
 		}
 
 		player.RotateClockwise()
 		expected = Vector2{0, 1}
-		if *player.direction != expected {
+		if player.direction != expected {
 			t.Fatalf("ERROR: expected %d actual %d\n", expected, player.direction)
 		}
 
 		player.RotateClockwise()
 		expected = Vector2{-1, 0}
-		if *player.direction != expected {
+		if player.direction != expected {
 			t.Fatalf("ERROR: expected %d actual %d\n", expected, player.direction)
 		}
 
 		player.RotateClockwise()
 		expected = Vector2{0, -1}
-		if *player.direction != expected {
+		if player.direction != expected {
 			t.Fatalf("ERROR: expected %d actual %d\n", expected, player.direction)
 		}
 	})
