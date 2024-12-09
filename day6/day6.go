@@ -2,87 +2,51 @@ package main
 
 import (
 	"aoc-lib/aoc"
-	"aoc-lib/its"
+	"aoc-lib/map2d"
 	"aoc-lib/slices"
-	"fmt"
 	"io"
 	"maps"
-	"math"
 )
 
 type Day6 struct{}
 
-type Vector2 struct{ x, y int }
-
-func (v *Vector2) RotateClockwise() *Vector2 {
-	v.x = int(float64(v.x)*math.Cos(math.Pi/2) - (float64(v.y) * (math.Sin(math.Pi / 2))))
-	v.y = int(float64(v.x)*math.Sin(math.Pi/2) - (float64(v.y) * (math.Cos(math.Pi / 2))))
-	return v
-}
-
 type Player struct {
-	pos       Vector2
-	direction Vector2
+	pos       map2d.Vector2
+	direction map2d.Vector2
 }
 
 func (p *Player) RotateClockwise() {
-	if p.direction.x == 1 {
-		p.direction.x = 0
-		p.direction.y = 1
-	} else if p.direction.x == -1 {
-		p.direction.x = 0
-		p.direction.y = -1
-	} else if p.direction.y == 1 {
-		p.direction.x = -1
-		p.direction.y = 0
-	} else {
-		p.direction.x = 1
-		p.direction.y = 0
-	}
+	p.direction = p.direction.RotateClockwise()
 }
 
-func (p *Player) PeekStep() Vector2 {
-	return Vector2{p.pos.x + p.direction.x, p.pos.y + p.direction.y}
+func (p *Player) PeekStep() map2d.Vector2 {
+	return p.pos.Add(p.direction)
 }
 
 func (p *Player) Step() {
-	p.pos.x += p.direction.x
-	p.pos.y += p.direction.y
+	p.pos.AddMut(p.direction)
 }
 
 var _ aoc.Problem = (*Day6)(nil)
 
-func inBounce(rows, cols int, player Player) bool {
-	return player.pos.y >= 0 && player.pos.y < rows && player.pos.x >= 0 && player.pos.x < cols
-}
-
 func (*Day6) Part1(r io.Reader) int {
-	obstacleSet := make(slices.Set[Vector2])
-	map2d := make([][]byte, 0)
+	obstacleSet := make(slices.Set[map2d.Vector2])
+	fields := map2d.NewCellMap(r, map2d.CellMapFn)
 	var player Player
 
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
-		map2d = append(map2d, []byte(row))
-	}
-	rows := len(map2d)
-	cols := len(map2d[0])
-
-	for y, row := range map2d {
-		for x, char := range row {
-			if char == '^' {
-				player.pos = Vector2{x, y}
-				player.direction = Vector2{0, -1}
-			}
-			if char == '#' {
-				obstacleSet.Set(Vector2{x, y})
-			}
+	for cell := range fields.Iter() {
+		if cell.Value == '^' {
+			player.pos = cell.ExtractCoords()
+			player.direction = map2d.NewVector2(0, -1)
+		} else if cell.Value == '#' {
+			obstacleSet.Set(cell.ExtractCoords())
 		}
 	}
 
-	steppedSet := make(slices.Set[Vector2])
+	steppedSet := make(slices.Set[map2d.Vector2])
 	steppedSet.Set(player.pos)
 
-	for inBounce(rows, cols, player) {
+	for fields.InBounce(player.pos) {
 		newPos := player.PeekStep()
 		if obstacleSet.Has(newPos) {
 			player.RotateClockwise()
@@ -95,50 +59,28 @@ func (*Day6) Part1(r io.Reader) int {
 		steppedSet.Set(player.pos)
 	}
 
-	for y, row := range map2d {
-		for x := range row {
-			pos := Vector2{x, y}
-			if steppedSet.Has(pos) {
-				// fmt.Print("X")
-			} else if obstacleSet.Has(pos) {
-				// fmt.Print("#")
-			} else {
-				// fmt.Print(".")
-			}
-		}
-		// fmt.Println()
-	}
-
 	return len(steppedSet) - 1
 }
 
 func (*Day6) Part2(r io.Reader) int {
-	obstacleSet := make(slices.Set[Vector2])
-	map2d := make([][]byte, 0)
+	obstacleSet := make(slices.Set[map2d.Vector2])
 	var player Player
 
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
-		map2d = append(map2d, []byte(row))
-	}
-	rows := len(map2d)
-	cols := len(map2d[0])
+	fields := map2d.NewCellMap(r, map2d.CellMapFn)
 
-	for y, row := range map2d {
-		for x, char := range row {
-			if char == '^' {
-				player.pos = Vector2{x, y}
-				player.direction = Vector2{0, -1}
-			}
-			if char == '#' {
-				obstacleSet.Set(Vector2{x, y})
-			}
+	for cell := range fields.Iter() {
+		if cell.Value == '^' {
+			player.pos = cell.ExtractCoords()
+			player.direction = map2d.NewVector2(0, -1)
+		} else if cell.Value == '#' {
+			obstacleSet.Set(cell.ExtractCoords())
 		}
 	}
 
-	playerSteps := make([]Vector2, 0)
+	playerSteps := make([]map2d.Vector2, 0)
 
 	testPlayer := Player{pos: player.pos, direction: player.direction}
-	for inBounce(rows, cols, testPlayer) {
+	for fields.InBounce(testPlayer.pos) {
 		newPos := testPlayer.PeekStep()
 		if obstacleSet.Has(newPos) {
 			testPlayer.RotateClockwise()
@@ -151,7 +93,7 @@ func (*Day6) Part2(r io.Reader) int {
 		playerSteps = append(playerSteps, testPlayer.pos)
 	}
 
-	obstacleTestSet := slices.NewSet[Vector2]()
+	obstacleTestSet := slices.NewSet[map2d.Vector2]()
 
 	var count int
 	for i, v := range playerSteps {
@@ -165,7 +107,7 @@ func (*Day6) Part2(r io.Reader) int {
 		newObstacles := maps.Clone(obstacleSet)
 		newObstacles.Set(v)
 
-		if testForLoop(map2d, player, rows, cols, newObstacles) {
+		if testForLoop(fields, player, newObstacles) {
 			count += 1
 		}
 	}
@@ -173,12 +115,12 @@ func (*Day6) Part2(r io.Reader) int {
 	return count
 }
 
-func testForLoop(map2d [][]byte, p Player, rows, cols int, obstacles slices.Set[Vector2]) bool {
+func testForLoop(fields *map2d.CellMap[map2d.Cell], p Player, obstacles slices.Set[map2d.Vector2]) bool {
 	loopDetectionSet := slices.NewSet[Player]()
-	steppedSet := make(slices.Set[Vector2])
+	steppedSet := make(slices.Set[map2d.Vector2])
 	steppedSet.Set(p.pos)
 
-	for inBounce(rows, cols, p) {
+	for fields.InBounce(p.pos) {
 		newPos := p.PeekStep()
 		if obstacles.Has(newPos) {
 			p.RotateClockwise()
@@ -201,18 +143,14 @@ func testForLoop(map2d [][]byte, p Player, rows, cols int, obstacles slices.Set[
 	return false
 }
 
-func PrintMap(map2d [][]byte, steppedSet slices.Set[Vector2], obstacles slices.Set[Vector2]) {
-	for y, row := range map2d {
-		for x := range row {
-			pos := Vector2{x, y}
-			if steppedSet.Has(pos) {
-				fmt.Print("X")
-			} else if obstacles.Has(pos) {
-				fmt.Print("#")
-			} else {
-				fmt.Print(".")
-			}
+func PrintMap(fields *map2d.CellMap[map2d.Cell], steppedSet slices.Set[map2d.Vector2], obstacles slices.Set[map2d.Vector2]) {
+	fields.DebugPrint(func(c map2d.Cell) string {
+		if steppedSet.Has(c.ExtractCoords()) {
+			return "X"
+		} else if obstacles.Has(c.ExtractCoords()) {
+			return "#"
+		} else {
+			return "."
 		}
-		fmt.Println()
-	}
+	})
 }

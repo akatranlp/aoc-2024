@@ -14,32 +14,30 @@ var _ aoc.Problem = (*Day9)(nil)
 
 func (*Day9) Part1(r io.Reader) int {
 	var numbers []int
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		numbers = its.MapSlice([]byte(row), func(char byte) int { return int(char - '0') })
 	}
 
-	var disk = make([]int, 0)
-	var id int
-	for chunk := range slices.Chunk(numbers, 2) {
+	disk := its.Reduce2(its.Enumerate(slices.Chunk(numbers, 2)), make([]int, 0), func(acc []int, idx int, chunk []int) []int {
 		length := len(chunk)
 		if length == 0 {
-			break
+			return acc
 		}
 		if length > 0 {
 			file := chunk[0]
 
 			for range file {
-				disk = append(disk, id)
+				acc = append(acc, idx)
 			}
 		}
 		if length > 1 {
 			free := chunk[1]
 			for range free {
-				disk = append(disk, -1)
+				acc = append(acc, -1)
 			}
 		}
-		id++
-	}
+		return acc
+	})
 
 	leftIdx, rightIdx := 0, len(disk)-1
 	for leftIdx != rightIdx {
@@ -81,18 +79,16 @@ type Block struct {
 
 func (*Day9) Part2(r io.Reader) int {
 	var numbers []int
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		numbers = its.MapSlice([]byte(row), func(char byte) int { return int(char - '0') })
 	}
 
-	var disk = make([]*Block, 0)
-	var id int
-	for chunk := range slices.Chunk(numbers, 2) {
+	disk := its.Reduce2(its.Enumerate(slices.Chunk(numbers, 2)), make([]*Block, 0), func(acc []*Block, idx int, chunk []int) []*Block {
 		length := len(chunk)
 		if length == 0 {
-			break
+			return acc
 		}
-		block := &Block{id: id}
+		block := &Block{id: idx}
 		if length > 0 {
 			file := chunk[0]
 			block.fileSize = file
@@ -101,14 +97,13 @@ func (*Day9) Part2(r io.Reader) int {
 			free := chunk[1]
 			block.freeSize = free
 		}
-		disk = append(disk, block)
-		id++
-	}
+		return append(acc, block)
+	})
 
-	for lastFileId := id - 1; lastFileId != 0; lastFileId-- {
-		idx := slices.IndexFunc(disk, func(block *Block) bool { return block.id == lastFileId })
+	for idx := len(disk) - 1; idx != 0; {
 		tryToMoveBlock := disk[idx]
 
+		var found bool
 		for i := 0; i < idx; i++ {
 			leftBlock := disk[i]
 			if leftBlock.freeSize < tryToMoveBlock.fileSize {
@@ -118,18 +113,20 @@ func (*Day9) Part2(r io.Reader) int {
 			leftFromRemovingBlock.freeSize += tryToMoveBlock.fileSize + tryToMoveBlock.freeSize
 			tryToMoveBlock.freeSize = leftBlock.freeSize - tryToMoveBlock.fileSize
 			leftBlock.freeSize = 0
-			newDisk := make([]*Block, 0)
-			newDisk = append(newDisk, disk[:i+1]...)
-			newDisk = append(newDisk, tryToMoveBlock)
-			newDisk = append(newDisk, disk[i+1:idx]...)
-			newDisk = append(newDisk, disk[idx+1:]...)
-			disk = newDisk
+			disk = its.RemoveIndex(slices.Insert(disk, i+1, tryToMoveBlock), idx+1)
+			found = true
 
 			break
 		}
+		if !found {
+			idx--
+		}
 	}
 
-	flatDisk := make([]int, 0)
+	capacity := its.Reduce(slices.Values(disk), 0, func(acc int, block *Block) int {
+		return acc + block.fileSize + block.freeSize
+	})
+	flatDisk := make([]int, 0, capacity)
 	for _, block := range disk {
 		for range block.fileSize {
 			flatDisk = append(flatDisk, block.id)

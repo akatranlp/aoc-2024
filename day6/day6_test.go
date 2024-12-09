@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aoc-lib/map2d"
 	"bytes"
 	"testing"
 )
@@ -45,29 +46,58 @@ func TestDay6(t *testing.T) {
 
 func TestPlayer(t *testing.T) {
 	t.Run("Rotate Clockwise", func(t *testing.T) {
-		player := Player{direction: Vector2{0, -1}}
-		expected := Vector2{1, 0}
+		player := Player{direction: map2d.NewVector2(0, -1)}
+		expected := map2d.NewVector2(1, 0)
 		player.RotateClockwise()
 		if player.direction != expected {
 			t.Fatalf("ERROR: expected %d actual %d\n", expected, player.direction)
 		}
 
 		player.RotateClockwise()
-		expected = Vector2{0, 1}
+		expected = map2d.NewVector2(0, 1)
 		if player.direction != expected {
 			t.Fatalf("ERROR: expected %d actual %d\n", expected, player.direction)
 		}
 
 		player.RotateClockwise()
-		expected = Vector2{-1, 0}
+		expected = map2d.NewVector2(-1, 0)
 		if player.direction != expected {
 			t.Fatalf("ERROR: expected %d actual %d\n", expected, player.direction)
 		}
 
 		player.RotateClockwise()
-		expected = Vector2{0, -1}
+		expected = map2d.NewVector2(0, -1)
 		if player.direction != expected {
 			t.Fatalf("ERROR: expected %d actual %d\n", expected, player.direction)
+		}
+	})
+}
+
+func TestVector(t *testing.T) {
+	t.Run("Rotate Clockwise", func(t *testing.T) {
+		dir := map2d.NewVector2(0, -1)
+		expected := map2d.NewVector2(1, 0)
+		dir.RotateClockwiseMut()
+		if dir != expected {
+			t.Fatalf("ERROR: expected %d actual %d\n", expected, dir)
+		}
+
+		dir.RotateClockwiseMut()
+		expected = map2d.NewVector2(0, 1)
+		if dir != expected {
+			t.Fatalf("ERROR: expected %d actual %d\n", expected, dir)
+		}
+
+		dir.RotateClockwiseMut()
+		expected = map2d.NewVector2(-1, 0)
+		if dir != expected {
+			t.Fatalf("ERROR: expected %d actual %d\n", expected, dir)
+		}
+
+		dir.RotateClockwiseMut()
+		expected = map2d.NewVector2(0, -1)
+		if dir != expected {
+			t.Fatalf("ERROR: expected %d actual %d\n", expected, dir)
 		}
 	})
 }

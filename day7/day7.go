@@ -60,7 +60,7 @@ func walkCalculation(curr int, c Calculation) bool {
 
 func (*Day7) Part1(r io.Reader) int {
 	calculations := make([]Calculation, 0)
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		calc := strings.Split(row, ": ")
 		result := utils.Must(strconv.Atoi(calc[0]))
 		numbers := its.MapSlice(strings.Split(calc[1], " "), func(s string) int { return utils.Must(strconv.Atoi(s)) })
@@ -87,8 +87,7 @@ func walkCalculationPart2(curr int, c Calculation) bool {
 	mult := curr * next
 	add := curr + next
 
-	var combination int
-	utils.Must(fmt.Sscanf(fmt.Sprintf("%d%d", curr, next), "%d", &combination))
+	combination := utils.Must(strconv.Atoi(fmt.Sprintf("%d%d", curr, next)))
 
 	if mult == c.result || add == c.result || combination == c.result {
 		return true
@@ -121,7 +120,7 @@ func walkCalculationPart2(curr int, c Calculation) bool {
 
 func (*Day7) Part2(r io.Reader) int {
 	calculations := make([]Calculation, 0)
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		calc := strings.Split(row, ": ")
 		result := utils.Must(strconv.Atoi(calc[0]))
 		numbers := its.MapSlice(strings.Split(calc[1], " "), func(s string) int { return utils.Must(strconv.Atoi(s)) })

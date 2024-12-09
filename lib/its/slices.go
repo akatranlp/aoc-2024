@@ -92,7 +92,7 @@ func Window[T any](seq iter.Seq[T], n int) iter.Seq[[]T] {
 		ip := PullFromIter(next)
 		for ip.Next() {
 			window = append(window[1:], ip.value)
-			if !yield(window) {
+			if !yield(window[1:len(window):len(window)]) {
 				return
 			}
 		}
@@ -202,6 +202,25 @@ func Reduce[T, K any](seq iter.Seq[T], acc K, reduceFunc func(acc K, value T) K)
 	return acc
 }
 
+func Reduce2[K, V, T any](seq iter.Seq2[K, V], acc T, reduceFunc func(acc T, key K, value V) T) T {
+	for k, v := range seq {
+		acc = reduceFunc(acc, k, v)
+	}
+	return acc
+}
+
 func RemoveIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
+}
+
+func Enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
+	return func(yield func(int, T) bool) {
+		var idx int
+		for v := range seq {
+			if !yield(idx, v) {
+				return
+			}
+			idx++
+		}
+	}
 }

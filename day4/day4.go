@@ -51,7 +51,7 @@ func (d *Day4) searchWordDirection(row, col, dRow, dCol int, word string) bool {
 
 func (d *Day4) Part1(r io.Reader) int {
 	d.wordMap = make([]string, 0)
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		d.wordMap = append(d.wordMap, row)
 	}
 	var count int
@@ -104,7 +104,7 @@ func (d *Day4) checkX(row, col int) bool {
 
 func (d *Day4) Part2(r io.Reader) int {
 	d.wordMap = make([]string, 0)
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		d.wordMap = append(d.wordMap, row)
 	}
 	var count int

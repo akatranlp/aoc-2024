@@ -15,6 +15,7 @@ type Map2D struct {
 func (d *Map2D) InBounce(v Vector2) bool {
 	return v.Y >= 0 && v.Y < d.rows && v.X >= 0 && v.X < d.cols
 }
+
 func (d *Map2D) DebugPrint() {
 	for _, row := range d.data {
 		for _, char := range row {
@@ -24,27 +25,8 @@ func (d *Map2D) DebugPrint() {
 	}
 }
 
-func (d *Map2D) Set(p Point) {
+func (d *Map2D) Set(p Cell) {
 	d.data[p.Y][p.X] = p.Value
-}
-
-type Vector2 struct{ X, Y int }
-
-func (v Vector2) Sub(other Vector2) Vector2 {
-	return Vector2{v.X - other.X, v.Y - other.Y}
-}
-
-func (v Vector2) Add(other Vector2) Vector2 {
-	return Vector2{v.X + other.X, v.Y + other.Y}
-}
-
-type Point struct {
-	X, Y  int
-	Value byte
-}
-
-func (p Point) Extract() Vector2 {
-	return Vector2{p.X, p.Y}
 }
 
 func NewMap2DFromStrings(data []string) *Map2D {
@@ -77,11 +59,11 @@ func (m *Map2D) Append(row []byte) *Map2D {
 	return m
 }
 
-func (m *Map2D) IterEachField() iter.Seq[Point] {
-	return func(yield func(Point) bool) {
+func (m *Map2D) IterEachField() iter.Seq[Cell] {
+	return func(yield func(Cell) bool) {
 		for y, row := range m.data {
 			for x, v := range row {
-				if !yield(Point{x, y, v}) {
+				if !yield(Cell{x, y, v}) {
 					return
 				}
 			}

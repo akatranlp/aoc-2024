@@ -30,15 +30,17 @@ type Update struct {
 func (*Day5) Part1(r io.Reader) int {
 	orders := make([]Order, 0)
 	updates := make([]*Update, 0)
-	for i, block := range its.ReaderToIter(r, its.SplitByBlocks) {
-		if i == 0 {
-			for _, line := range its.Filter2(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
+	first := true
+	for block := range its.Filter(its.ReaderToIter(r, its.SplitByBlocks), its.FilterEmptyLines) {
+		if first {
+			first = false
+			for line := range its.Filter(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
 				var order Order
 				utils.Must(fmt.Sscanf(line, "%d|%d", &order.l, &order.r))
 				orders = append(orders, order)
 			}
-		} else if i == 1 {
-			for _, line := range its.Filter2(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
+		} else {
+			for line := range its.Filter(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
 				numbers := its.MapSlice(strings.Split(line, ","), func(s string) int { return utils.Must(strconv.Atoi(s)) })
 				update := &Update{
 					nList: numbers,
@@ -91,15 +93,17 @@ func (*Day5) Part1(r io.Reader) int {
 func (*Day5) Part2(r io.Reader) int {
 	orders := make([]Order, 0)
 	updates := make([]*Update, 0)
-	for i, block := range its.ReaderToIter(r, its.SplitByBlocks) {
-		if i == 0 {
-			for _, line := range its.Filter2(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
+	first := true
+	for block := range its.Filter(its.ReaderToIter(r, its.SplitByBlocks), its.FilterEmptyLines) {
+		if first {
+			first = false
+			for line := range its.Filter(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
 				var order Order
 				utils.Must(fmt.Sscanf(line, "%d|%d", &order.l, &order.r))
 				orders = append(orders, order)
 			}
-		} else if i == 1 {
-			for _, line := range its.Filter2(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
+		} else {
+			for line := range its.Filter(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
 				numbers := its.MapSlice(strings.Split(line, ","), func(s string) int { return utils.Must(strconv.Atoi(s)) })
 				update := &Update{
 					nList: numbers,

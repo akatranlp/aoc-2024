@@ -16,7 +16,7 @@ var _ aoc.Problem = (*Day1)(nil)
 func (*Day1) Part1(r io.Reader) int {
 	leftList := make([]int, 0)
 	rightList := make([]int, 0)
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		var number1, number2 int
 		fmt.Sscanf(row, "%d   %d", &number1, &number2)
 		leftList = append(leftList, number1)
@@ -38,7 +38,7 @@ func (*Day1) Part2(r io.Reader) int {
 	leftList := make([]int, 0)
 	rightMap := make(map[int]int)
 
-	for _, row := range its.ReaderToIter(r) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		var number1, number2 int
 		fmt.Sscanf(row, "%d   %d", &number1, &number2)
 		leftList = append(leftList, number1)

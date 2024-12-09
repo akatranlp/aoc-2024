@@ -20,20 +20,17 @@ const counterSignal = '#'
 var signalRegex = regexp.MustCompile("[a-zA-Z0-9]")
 
 func (*Day8) Part1(r io.Reader) int {
-	field := map2d.NewMap2D()
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
-		field.AppendString(row)
-	}
+	field := map2d.NewCellMap(r, map2d.CellMapFn)
 
 	signalMap := make(map[byte]set.Set[map2d.Vector2])
 	signalMap[counterSignal] = make(set.Set[map2d.Vector2])
 
-	for p := range its.Filter(field.IterEachField(), func(p map2d.Point) bool { return signalRegex.MatchString(string(p.Value)) }) {
+	for p := range its.Filter(field.Iter(), func(p map2d.Cell) bool { return signalRegex.MatchString(string(p.Value)) }) {
 		v, ok := signalMap[p.Value]
 		if !ok {
 			v = make(set.Set[map2d.Vector2])
 		}
-		v.Set(p.Extract())
+		v.Set(p.ExtractCoords())
 		signalMap[p.Value] = v
 	}
 
@@ -82,20 +79,17 @@ func (*Day8) Part1(r io.Reader) int {
 }
 
 func (*Day8) Part2(r io.Reader) int {
-	field := map2d.NewMap2D()
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
-		field.AppendString(row)
-	}
+	field := map2d.NewCellMap(r, map2d.CellMapFn)
 
 	signalMap := make(map[byte]set.Set[map2d.Vector2])
 	signalMap[counterSignal] = make(set.Set[map2d.Vector2])
 
-	for p := range its.Filter(field.IterEachField(), func(p map2d.Point) bool { return signalRegex.MatchString(string(p.Value)) }) {
+	for p := range its.Filter(field.Iter(), func(p map2d.Cell) bool { return signalRegex.MatchString(string(p.Value)) }) {
 		v, ok := signalMap[p.Value]
 		if !ok {
 			v = make(set.Set[map2d.Vector2])
 		}
-		v.Set(p.Extract())
+		v.Set(p.ExtractCoords())
 		signalMap[p.Value] = v
 	}
 

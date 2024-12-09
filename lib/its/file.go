@@ -7,21 +7,19 @@ import (
 	"iter"
 )
 
-func ReaderToIter(r io.Reader, splits ...bufio.SplitFunc) iter.Seq2[int, string] {
+func ReaderToIter(r io.Reader, splits ...bufio.SplitFunc) iter.Seq[string] {
 	scanner := bufio.NewScanner(r)
 	split := bufio.ScanLines
 	if len(splits) > 0 {
 		split = splits[0]
 	}
 	scanner.Split(split)
-	return func(yield func(i int, s string) bool) {
-		i := 0
+	return func(yield func(s string) bool) {
 		for scanner.Scan() {
 			msg := scanner.Text()
-			if !yield(i, msg) {
+			if !yield(msg) {
 				return
 			}
-			i++
 		}
 	}
 }

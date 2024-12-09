@@ -38,7 +38,7 @@ func isValid(list []int) bool {
 
 func (*Day2) Part1(r io.Reader) int {
 	sum := 0
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		values := strings.Split(row, " ")
 		numbers := its.Map(slices.Values(values), func(s string) int {
 			return utils.Must(strconv.Atoi(s))
@@ -54,7 +54,7 @@ func (*Day2) Part1(r io.Reader) int {
 
 func (*Day2) Part2(r io.Reader) int {
 	sum := 0
-	for _, row := range its.Filter2(its.ReaderToIter(r), its.FilterEmptyLines) {
+	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
 		values := strings.Split(row, " ")
 		numbers := its.Map(slices.Values(values), func(s string) int {
 			return utils.Must(strconv.Atoi(s))
