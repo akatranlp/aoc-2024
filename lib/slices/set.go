@@ -1,9 +1,19 @@
 package slices
 
+import "iter"
+
 type Set[T comparable] map[T]struct{}
 
 func NewSet[T comparable]() Set[T] {
 	return make(Set[T])
+}
+
+func NewSetFromIter[T comparable](seq iter.Seq[T]) Set[T] {
+	return NewSet[T]().SetIter(seq)
+}
+
+func NewSetWithValues[T comparable](slice ...T) Set[T] {
+	return NewSet[T]().SetValues(slice...)
 }
 
 func (s Set[T]) Outer(other Set[T]) Set[T] {
@@ -33,6 +43,20 @@ func (s Set[T]) Intersect(other Set[T]) Set[T] {
 
 func (s Set[T]) Set(k T) Set[T] {
 	s[k] = struct{}{}
+	return s
+}
+
+func (s Set[T]) SetIter(seq iter.Seq[T]) Set[T] {
+	for v := range seq {
+		s.Set(v)
+	}
+	return s
+}
+
+func (s Set[T]) SetValues(slice ...T) Set[T] {
+	for _, v := range slice {
+		s.Set(v)
+	}
 	return s
 }
 

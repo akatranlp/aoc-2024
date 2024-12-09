@@ -5,12 +5,9 @@ import (
 	"aoc-lib/its"
 	set "aoc-lib/slices"
 	"aoc-lib/utils"
-	"bytes"
 	"fmt"
 	"io"
-	"maps"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -27,30 +24,45 @@ type Update struct {
 	nMap  set.Set[int]
 }
 
+func (u *Update) isValid(orders []Order) bool {
+	for _, order := range orders {
+		_, okL := u.nMap[order.l]
+		_, okR := u.nMap[order.r]
+		if !okL || !okR {
+			continue
+		}
+		for _, n := range u.nList {
+			if n == order.l {
+				break
+			} else if n == order.r {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (*Day5) Part1(r io.Reader) int {
 	orders := make([]Order, 0)
 	updates := make([]*Update, 0)
+
 	first := true
-	for block := range its.Filter(its.ReaderToIter(r, its.SplitByBlocks), its.FilterEmptyLines) {
-		if first {
+	for row := range its.ReaderToIter(r) {
+		if row == "" {
 			first = false
-			for line := range its.Filter(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
-				var order Order
-				utils.Must(fmt.Sscanf(line, "%d|%d", &order.l, &order.r))
-				orders = append(orders, order)
-			}
+			continue
+		}
+		if first {
+			var order Order
+			utils.Must(fmt.Sscanf(row, "%d|%d", &order.l, &order.r))
+			orders = append(orders, order)
 		} else {
-			for line := range its.Filter(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
-				numbers := its.MapSlice(strings.Split(line, ","), func(s string) int { return utils.Must(strconv.Atoi(s)) })
-				update := &Update{
-					nList: numbers,
-					nMap:  make(map[int]struct{}),
-				}
-				for _, n := range numbers {
-					update.nMap[n] = struct{}{}
-				}
-				updates = append(updates, update)
+			numbers := its.MapSlice(strings.Split(row, ","), utils.MapToInt)
+			update := &Update{
+				nList: numbers,
+				nMap:  set.NewSetWithValues(numbers...),
 			}
+			updates = append(updates, update)
 		}
 	}
 
@@ -59,61 +71,35 @@ func (*Day5) Part1(r io.Reader) int {
 		orderMap[order.r] = append(orderMap[order.r], order.l)
 	}
 
-	var sum int
-	for _, update := range updates {
-		length := len(update.nList)
-		middleInt := update.nList[length/2]
-		found := true
-
-	outer:
-		for _, order := range orders {
-			_, okL := update.nMap[order.l]
-			_, okR := update.nMap[order.r]
-			if !okL || !okR {
-				continue
-			}
-			for _, n := range update.nList {
-				if n == order.l {
-					break
-				} else if n == order.r {
-					found = false
-					break outer
-				}
-			}
+	return its.Reduce(slices.Values(updates), 0, func(acc int, u *Update) int {
+		if u.isValid(orders) {
+			return acc + u.nList[len(u.nList)/2]
 		}
+		return acc
+	})
 
-		if found {
-			sum += middleInt
-		}
-	}
-
-	return sum
 }
 
 func (*Day5) Part2(r io.Reader) int {
 	orders := make([]Order, 0)
 	updates := make([]*Update, 0)
 	first := true
-	for block := range its.Filter(its.ReaderToIter(r, its.SplitByBlocks), its.FilterEmptyLines) {
-		if first {
+	for row := range its.ReaderToIter(r) {
+		if row == "" {
 			first = false
-			for line := range its.Filter(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
-				var order Order
-				utils.Must(fmt.Sscanf(line, "%d|%d", &order.l, &order.r))
-				orders = append(orders, order)
-			}
+			continue
+		}
+		if first {
+			var order Order
+			utils.Must(fmt.Sscanf(row, "%d|%d", &order.l, &order.r))
+			orders = append(orders, order)
 		} else {
-			for line := range its.Filter(its.ReaderToIter(bytes.NewBufferString(block)), its.FilterEmptyLines) {
-				numbers := its.MapSlice(strings.Split(line, ","), func(s string) int { return utils.Must(strconv.Atoi(s)) })
-				update := &Update{
-					nList: numbers,
-					nMap:  set.NewSet[int](),
-				}
-				for _, n := range numbers {
-					update.nMap.Set(n)
-				}
-				updates = append(updates, update)
+			numbers := its.MapSlice(strings.Split(row, ","), utils.MapToInt)
+			update := &Update{
+				nList: numbers,
+				nMap:  set.NewSetWithValues(numbers...),
 			}
+			updates = append(updates, update)
 		}
 	}
 
@@ -127,54 +113,19 @@ func (*Day5) Part2(r io.Reader) int {
 		orderMap[order.r] = m
 	}
 
-	var falseUpdates []*Update
-
-	var sum int
-	for _, update := range updates {
-		found := true
-
-	outer:
-		for _, order := range orders {
-			_, okL := update.nMap[order.l]
-			_, okR := update.nMap[order.r]
-			if !okL || !okR {
-				continue
-			}
-			for _, n := range update.nList {
-				if n == order.l {
-					break
-				} else if n == order.r {
-					found = false
-					break outer
-				}
-			}
-		}
-
-		if !found {
-			falseUpdates = append(falseUpdates, update)
-		}
-	}
+	falseUpdates := its.Filter(slices.Values(updates), func(u *Update) bool { return !u.isValid(orders) })
 
 	type tuple struct {
 		f, s int
 	}
 
-	for _, update := range falseUpdates {
-		numbersBeforeMap := make(map[int][]int)
-		for _, n := range update.nList {
+	return its.Reduce(falseUpdates, 0, func(acc int, update *Update) int {
+		order := its.MapSlice(update.nList, func(n int) tuple {
 			orderSet := orderMap[n]
 			numbersBefore := orderSet.Intersect(update.nMap)
-			numbersBeforeMap[n] = slices.Collect(maps.Keys(numbersBefore))
-		}
-
-		order := make([]tuple, 0)
-		for k, v := range numbersBeforeMap {
-			order = append(order, tuple{k, len(v)})
-		}
+			return tuple{n, len(numbersBefore)}
+		})
 		slices.SortFunc(order, func(a tuple, b tuple) int { return a.s - b.s })
-		final := its.MapSlice(order, func(o tuple) int { return o.f })
-		sum += final[len(final)/2]
-	}
-
-	return sum
+		return acc + order[len(order)/2].f
+	})
 }

@@ -2,6 +2,7 @@ package its
 
 import (
 	"iter"
+	"maps"
 	"slices"
 )
 
@@ -131,6 +132,16 @@ func Map[T, K any](seq iter.Seq[T], f func(T) K) iter.Seq[K] {
 	}
 }
 
+func Map1To2[K comparable, V, T any](seq iter.Seq[T], f func(T) (K, V)) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		for v := range seq {
+			if !yield(f(v)) {
+				return
+			}
+		}
+	}
+}
+
 func Map2[K, V, T any](seq iter.Seq2[K, V], f func(K, V) T) iter.Seq[T] {
 	return func(yield func(T) bool) {
 		for k, v := range seq {
@@ -143,6 +154,10 @@ func Map2[K, V, T any](seq iter.Seq2[K, V], f func(K, V) T) iter.Seq[T] {
 
 func MapSlice[T, K any](seq []T, f func(T) K) []K {
 	return slices.Collect(Map(slices.Values(seq), f))
+}
+
+func Map2Slice[K comparable, V, T any](seq map[K]V, f func(K, V) T) []T {
+	return slices.Collect(Map2(maps.All(seq), f))
 }
 
 type PredicateFunc[T any] func(T) bool
@@ -160,6 +175,10 @@ func Filter[T any](seq iter.Seq[T], predicate PredicateFunc[T]) iter.Seq[T] {
 			}
 		}
 	}
+}
+
+func FilterSlice[T any](slice []T, predicate PredicateFunc[T]) []T {
+	return slices.Collect(Filter(slices.Values(slice), predicate))
 }
 
 func Filter2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc[V]) iter.Seq2[K, V] {

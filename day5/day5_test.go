@@ -5,8 +5,7 @@ import (
 	"testing"
 )
 
-var part1Test = `
-47|53
+var part1Test = `47|53
 97|13
 97|61
 97|47
