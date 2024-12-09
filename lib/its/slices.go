@@ -181,10 +181,10 @@ func FilterSlice[T any](slice []T, predicate PredicateFunc[T]) []T {
 	return slices.Collect(Filter(slices.Values(slice), predicate))
 }
 
-func Filter2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc[V]) iter.Seq2[K, V] {
+func Filter2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc2[K, V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		for k, v := range seq {
-			if !predicate(v) {
+			if !predicate(k, v) {
 				continue
 			}
 			if !yield(k, v) {
