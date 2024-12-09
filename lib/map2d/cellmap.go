@@ -36,6 +36,10 @@ func (d *CellMap[T]) InBounce(v Vector2) bool {
 	return v.Y >= 0 && v.Y < d.rows && v.X >= 0 && v.X < d.cols
 }
 
+func (d *CellMap[T]) Get(v Vector2) T {
+	return d.data[v.Y][v.X]
+}
+
 func (m *CellMap[T]) Iter() iter.Seq[T] {
 	return func(yield func(T) bool) {
 		for _, row := range m.data {

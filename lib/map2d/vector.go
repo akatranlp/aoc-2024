@@ -83,3 +83,13 @@ func (v *Vector2) AddMut(other Vector2) *Vector2 {
 	v.Y += other.Y
 	return v
 }
+
+func (v Vector2) Scale(n int) Vector2 {
+	return Vector2{v.X * n, v.Y * n}
+}
+
+func (v *Vector2) ScaleMut(n int) *Vector2 {
+	v.X *= n
+	v.Y *= n
+	return v
+}

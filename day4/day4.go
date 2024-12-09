@@ -3,25 +3,26 @@ package main
 import (
 	"aoc-lib/aoc"
 	"aoc-lib/its"
+	"aoc-lib/map2d"
 	"io"
+	"slices"
 )
 
-type Day4 struct {
-	wordMap []string
-}
+type Day4 struct{}
 
 var _ aoc.Problem = (*Day4)(nil)
 
-func (d *Day4) searchWord(row, col int, word string) int {
+var neighbors = []int{-1, 0, 1}
+
+func searchWord(fields *map2d.CellMap[map2d.Cell], pos map2d.Vector2, word string) int {
 	var count int
-	neighbors := []int{-1, 0, 1}
 	for _, dRow := range neighbors {
 		for _, dCol := range neighbors {
 			if dRow == 0 && dCol == 0 {
 				continue
 			}
-			if d.searchWordDirection(row, col, dRow, dCol, word) {
-				// fmt.Printf("FOUND XMAS at (%d %d) -> (%d, %d)\n", row, col, dCol, dRow)
+			dir := map2d.NewVector2(dCol, dRow)
+			if searchWordDirection(fields, pos, dir, word) {
 				count++
 			}
 		}
@@ -29,96 +30,72 @@ func (d *Day4) searchWord(row, col int, word string) int {
 	return count
 }
 
-func (d *Day4) inBounce(row, col int) bool {
-	rows := len(d.wordMap)
-	cols := len(d.wordMap[0])
-	return row >= 0 && row < rows && col >= 0 && col < cols
+func searchWordDirection(fields *map2d.CellMap[map2d.Cell], pos, dir map2d.Vector2, word string) bool {
+	return its.All2(slices.All([]byte(word)), func(idx int, char byte) bool {
+		newPos := pos.Add(dir.Scale(idx))
+		if !fields.InBounce(newPos) {
+			return false
+		}
+		if fields.Get(newPos).Value != char {
+			return false
+		}
+		return true
+	})
 }
 
-func (d *Day4) searchWordDirection(row, col, dRow, dCol int, word string) bool {
-	for i := range word {
-		newRow := row + dRow*i
-		newCol := col + dCol*i
-		if !d.inBounce(newRow, newCol) {
-			return false
+func (*Day4) Part1(r io.Reader) int {
+	fields := map2d.NewCellMap(r, map2d.CellMapFn)
+	return its.Reduce(fields.Iter(), 0, func(acc int, cell map2d.Cell) int {
+		if cell.Value == 'X' {
+			return acc + searchWord(fields, cell.ExtractCoords(), "XMAS")
 		}
-		if d.wordMap[newRow][newCol] != word[i] {
-			return false
-		}
-	}
-	return true
+		return acc
+	})
 }
 
-func (d *Day4) Part1(r io.Reader) int {
-	d.wordMap = make([]string, 0)
-	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
-		d.wordMap = append(d.wordMap, row)
+var (
+	topLeft     = map2d.NewVector2(-1, -1)
+	topRight    = map2d.NewVector2(-1, 1)
+	bottomLeft  = map2d.NewVector2(1, -1)
+	bottomRight = map2d.NewVector2(1, 1)
+)
+
+func checkX(fields *map2d.CellMap[map2d.Cell], pos map2d.Vector2) bool {
+	var newPos1, newPos2 map2d.Vector2
+	var cell1, cell2 map2d.Cell
+
+	newPos1 = pos.Add(topLeft)
+	newPos2 = pos.Add(bottomRight)
+
+	if !fields.InBounce(newPos1) || !fields.InBounce(newPos2) {
+		return false
 	}
-	var count int
-
-	// fmt.Println(d.searchWord(0, 5, "XMAS"))
-
-	for i := range d.wordMap {
-		for j := range d.wordMap[i] {
-			element := d.wordMap[i][j]
-			if element == 'X' {
-				count += d.searchWord(i, j, "XMAS")
-			}
-		}
+	cell1 = fields.Get(newPos1)
+	cell2 = fields.Get(newPos2)
+	if !(cell1.Value == 'M' && cell2.Value == 'S') && !(cell1.Value == 'S' && cell2.Value == 'M') {
+		return false
 	}
 
-	return count
-}
-
-func (d *Day4) checkX(row, col int) bool {
-	{
-		newRow1 := row - 1
-		newCol1 := col - 1
-		newRow2 := row + 1
-		newCol2 := col + 1
-		if !d.inBounce(newRow1, newCol1) || !d.inBounce(newRow2, newCol2) {
-			return false
-		}
-		char1 := d.wordMap[newRow1][newCol1]
-		char2 := d.wordMap[newRow2][newCol2]
-		if !(char1 == 'M' && char2 == 'S') && !(char1 == 'S' && char2 == 'M') {
-			return false
-		}
+	newPos1 = pos.Add(topRight)
+	newPos2 = pos.Add(bottomLeft)
+	if !fields.InBounce(newPos1) || !fields.InBounce(newPos2) {
+		return false
 	}
-	{
-		newRow1 := row + 1
-		newCol1 := col - 1
-		newRow2 := row - 1
-		newCol2 := col + 1
-		if !d.inBounce(newRow1, newCol1) || !d.inBounce(newRow2, newCol2) {
-			return false
-		}
-		char1 := d.wordMap[newRow1][newCol1]
-		char2 := d.wordMap[newRow2][newCol2]
-		if !(char1 == 'M' && char2 == 'S') && !(char1 == 'S' && char2 == 'M') {
-			return false
-		}
+	cell1 = fields.Get(newPos1)
+	cell2 = fields.Get(newPos2)
+	if !(cell1.Value == 'M' && cell2.Value == 'S') && !(cell1.Value == 'S' && cell2.Value == 'M') {
+		return false
 	}
 	return true
 }
 
 func (d *Day4) Part2(r io.Reader) int {
-	d.wordMap = make([]string, 0)
-	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
-		d.wordMap = append(d.wordMap, row)
-	}
-	var count int
+	fields := map2d.NewCellMap(r, map2d.CellMapFn)
 
-	for i := range d.wordMap {
-		for j := range d.wordMap[i] {
-			element := d.wordMap[i][j]
-			if element == 'A' {
-				if d.checkX(i, j) {
-					count++
-				}
-			}
+	return its.Reduce(fields.Iter(), 0, func(acc int, cell map2d.Cell) int {
+		if cell.Value == 'A' && checkX(fields, cell.ExtractCoords()) {
+			return acc + 1
 		}
-	}
-
-	return count
+		return acc
+	})
 }
