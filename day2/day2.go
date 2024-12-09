@@ -6,7 +6,6 @@ import (
 	"aoc-lib/utils"
 	"io"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -20,8 +19,7 @@ func isValid(list []int) bool {
 	}
 
 	order := list[0]-list[1] < 0
-	for i := 0; i < len(list)-1; i++ {
-		v1, v2 := list[i], list[i+1]
+	for v1, v2 := range its.Window2(slices.Values(list)) {
 		asc := v1-v2 < 0
 
 		if asc && !order || !asc && order {
@@ -37,40 +35,22 @@ func isValid(list []int) bool {
 }
 
 func (*Day2) Part1(r io.Reader) int {
-	sum := 0
-	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
-		values := strings.Split(row, " ")
-		numbers := its.Map(slices.Values(values), func(s string) int {
-			return utils.Must(strconv.Atoi(s))
-		})
-		list := slices.Collect(numbers)
-		if isValid(list) {
-			sum += 1
+	return its.Reduce(its.Filter(its.ReaderToIter(r), its.FilterEmptyLines), 0, func(acc int, row string) int {
+		if isValid(its.MapSlice(strings.Split(row, " "), utils.MapToInt)) {
+			return acc + 1
 		}
-	}
-
-	return sum
+		return acc
+	})
 }
 
 func (*Day2) Part2(r io.Reader) int {
-	sum := 0
-	for row := range its.Filter(its.ReaderToIter(r), its.FilterEmptyLines) {
-		values := strings.Split(row, " ")
-		numbers := its.Map(slices.Values(values), func(s string) int {
-			return utils.Must(strconv.Atoi(s))
-		})
-
-		list := slices.Collect(numbers)
-		for removeIndex := range list {
-			newList := make([]int, len(list))
-			copy(newList, list)
-			newList = append(newList[:removeIndex], newList[removeIndex+1:]...)
-			if isValid(newList) {
-				sum += 1
-				break
+	return its.Reduce(its.Filter(its.ReaderToIter(r), its.FilterEmptyLines), 0, func(acc int, row string) int {
+		numbers := its.MapSlice(strings.Split(row, " "), utils.MapToInt)
+		for removeIndex := range numbers {
+			if isValid(its.RemoveIndexNew(numbers, removeIndex)) {
+				return acc + 1
 			}
 		}
-	}
-
-	return sum
+		return acc
+	})
 }

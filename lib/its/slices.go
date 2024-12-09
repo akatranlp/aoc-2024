@@ -213,6 +213,11 @@ func RemoveIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
 }
 
+func RemoveIndexNew[T any](slice []T, index int) []T {
+	newList := append(make([]T, 0, len(slice)-1), slice[:index]...)
+	return append(newList, slice[index+1:]...)
+}
+
 func Enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
 	return func(yield func(int, T) bool) {
 		var idx int
