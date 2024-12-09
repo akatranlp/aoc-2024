@@ -248,3 +248,9 @@ func Enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
 		}
 	}
 }
+
+func ForEach[T any](seq iter.Seq[T], f func(T)) {
+	for v := range seq {
+		f(v)
+	}
+}
