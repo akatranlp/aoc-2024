@@ -2,10 +2,12 @@ package main
 
 import (
 	"aoc-lib/aoc"
+	"aoc-lib/its"
 	"aoc-lib/map2d"
-	"aoc-lib/slices"
+	set "aoc-lib/slices"
 	"io"
 	"maps"
+	"slices"
 )
 
 type Day6 struct{}
@@ -30,7 +32,7 @@ func (p *Player) Step() {
 var _ aoc.Problem = (*Day6)(nil)
 
 func (*Day6) Part1(r io.Reader) int {
-	obstacleSet := make(slices.Set[map2d.Vector2])
+	obstacleSet := make(set.Set[map2d.Vector2])
 	fields := map2d.NewCellMap(r, map2d.CellMapFn)
 	var player Player
 
@@ -43,8 +45,7 @@ func (*Day6) Part1(r io.Reader) int {
 		}
 	}
 
-	steppedSet := make(slices.Set[map2d.Vector2])
-	steppedSet.Set(player.pos)
+	steppedSet := set.NewSetWithValues(player.pos)
 
 	for fields.InBounce(player.pos) {
 		newPos := player.PeekStep()
@@ -63,7 +64,7 @@ func (*Day6) Part1(r io.Reader) int {
 }
 
 func (*Day6) Part2(r io.Reader) int {
-	obstacleSet := make(slices.Set[map2d.Vector2])
+	obstacleSet := make(set.Set[map2d.Vector2])
 	var player Player
 
 	fields := map2d.NewCellMap(r, map2d.CellMapFn)
@@ -93,32 +94,27 @@ func (*Day6) Part2(r io.Reader) int {
 		playerSteps = append(playerSteps, testPlayer.pos)
 	}
 
-	obstacleTestSet := slices.NewSet[map2d.Vector2]()
+	obstacleTestSet := set.NewSet[map2d.Vector2]()
 
-	var count int
-	for i, v := range playerSteps {
-		if i == len(playerSteps)-1 {
-			continue
+	return its.Reduce2(slices.All(playerSteps), 0, func(acc int, i int, step map2d.Vector2) int {
+		if i == len(playerSteps)-1 || obstacleTestSet.Has(step) {
+			return acc
 		}
-		if obstacleTestSet.Has(v) {
-			continue
-		}
-		obstacleTestSet.Set(v)
+
+		obstacleTestSet.Set(step)
 		newObstacles := maps.Clone(obstacleSet)
-		newObstacles.Set(v)
+		newObstacles.Set(step)
 
 		if testForLoop(fields, player, newObstacles) {
-			count += 1
+			return acc + 1
 		}
-	}
-
-	return count
+		return acc
+	})
 }
 
-func testForLoop(fields *map2d.CellMap[map2d.Cell], p Player, obstacles slices.Set[map2d.Vector2]) bool {
-	loopDetectionSet := slices.NewSet[Player]()
-	steppedSet := make(slices.Set[map2d.Vector2])
-	steppedSet.Set(p.pos)
+func testForLoop(fields *map2d.CellMap[map2d.Cell], p Player, obstacles set.Set[map2d.Vector2]) bool {
+	loopDetectionSet := set.NewSet[Player]()
+	// steppedSet := set.NewSetWithValues(p.pos)
 
 	for fields.InBounce(p.pos) {
 		newPos := p.PeekStep()
@@ -130,7 +126,7 @@ func testForLoop(fields *map2d.CellMap[map2d.Cell], p Player, obstacles slices.S
 			}
 		}
 		p.Step()
-		steppedSet.Set(p.pos)
+		// steppedSet.Set(p.pos)
 		if loopDetectionSet.Has(p) {
 			// PrintMap(map2d, steppedSet, obstacles)
 			// var s string
@@ -143,7 +139,7 @@ func testForLoop(fields *map2d.CellMap[map2d.Cell], p Player, obstacles slices.S
 	return false
 }
 
-func PrintMap(fields *map2d.CellMap[map2d.Cell], steppedSet slices.Set[map2d.Vector2], obstacles slices.Set[map2d.Vector2]) {
+func PrintMap(fields *map2d.CellMap[map2d.Cell], steppedSet set.Set[map2d.Vector2], obstacles set.Set[map2d.Vector2]) {
 	fields.DebugPrint(func(c map2d.Cell) string {
 		if steppedSet.Has(c.ExtractCoords()) {
 			return "X"
