@@ -161,6 +161,7 @@ func Map2Slice[K comparable, V, T any](seq map[K]V, f func(K, V) T) []T {
 }
 
 type PredicateFunc[T any] func(T) bool
+type PredicateFunc2[K, V any] func(k K, v V) bool
 
 var FilterEmptyLines PredicateFunc[string] = func(row string) bool { return row != "" }
 
@@ -203,8 +204,6 @@ func All[T any](seq iter.Seq[T], predicate PredicateFunc[T]) bool {
 	return true
 }
 
-type PredicateFunc2[K, V any] func(k K, v V) bool
-
 func All2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc2[K, V]) bool {
 	for k, v := range seq {
 		if !predicate(k, v) {
@@ -212,6 +211,24 @@ func All2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc2[K, V]) bool {
 		}
 	}
 	return true
+}
+
+func Any[T any](seq iter.Seq[T], predicate PredicateFunc[T]) bool {
+	for v := range seq {
+		if predicate(v) {
+			return true
+		}
+	}
+	return false
+}
+
+func Any2[K, V any](seq iter.Seq2[K, V], predicate PredicateFunc2[K, V]) bool {
+	for k, v := range seq {
+		if predicate(k, v) {
+			return true
+		}
+	}
+	return false
 }
 
 func Reduce[T, K any](seq iter.Seq[T], acc K, reduceFunc func(acc K, value T) K) K {
@@ -252,5 +269,15 @@ func Enumerate[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
 func ForEach[T any](seq iter.Seq[T], f func(T)) {
 	for v := range seq {
 		f(v)
+	}
+}
+
+func Range(n int) iter.Seq[int] {
+	return func(yield func(int) bool) {
+		for i := range n {
+			if !yield(i) {
+				return
+			}
+		}
 	}
 }

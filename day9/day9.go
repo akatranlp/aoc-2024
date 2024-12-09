@@ -19,18 +19,13 @@ func (*Day9) Part1(r io.Reader) int {
 	}
 
 	disk := its.Reduce2(its.Enumerate(slices.Chunk(numbers, 2)), make([]int, 0), func(acc []int, idx int, chunk []int) []int {
-		length := len(chunk)
-		if length == 0 {
-			return acc
-		}
-		if length > 0 {
-			file := chunk[0]
+		file := chunk[0]
 
-			for range file {
-				acc = append(acc, idx)
-			}
+		for range file {
+			acc = append(acc, idx)
 		}
-		if length > 1 {
+
+		if len(chunk) > 1 {
 			free := chunk[1]
 			for range free {
 				acc = append(acc, -1)
@@ -62,15 +57,13 @@ func (*Day9) Part1(r io.Reader) int {
 		rightIdx--
 	}
 
-	var sum int
-	for i, fileBlock := range disk {
+	return its.Reduce2(slices.All(disk), 0, func(acc, i, fileBlock int) int {
 		if fileBlock == -1 {
-			break
+			return acc
 		}
-		sum += i * fileBlock
-	}
+		return acc + i*fileBlock
+	})
 
-	return sum
 }
 
 type Block struct {
@@ -84,18 +77,9 @@ func (*Day9) Part2(r io.Reader) int {
 	}
 
 	disk := its.Reduce2(its.Enumerate(slices.Chunk(numbers, 2)), make([]*Block, 0), func(acc []*Block, idx int, chunk []int) []*Block {
-		length := len(chunk)
-		if length == 0 {
-			return acc
-		}
-		block := &Block{id: idx}
-		if length > 0 {
-			file := chunk[0]
-			block.fileSize = file
-		}
-		if length > 1 {
-			free := chunk[1]
-			block.freeSize = free
+		block := &Block{id: idx, fileSize: chunk[0]}
+		if len(chunk) > 1 {
+			block.freeSize = chunk[1]
 		}
 		return append(acc, block)
 	})
@@ -126,6 +110,7 @@ func (*Day9) Part2(r io.Reader) int {
 	capacity := its.Reduce(slices.Values(disk), 0, func(acc int, block *Block) int {
 		return acc + block.fileSize + block.freeSize
 	})
+
 	flatDisk := make([]int, 0, capacity)
 	for _, block := range disk {
 		for range block.fileSize {
@@ -136,15 +121,12 @@ func (*Day9) Part2(r io.Reader) int {
 		}
 	}
 
-	var sum int
-	for i, fileBlock := range flatDisk {
+	return its.Reduce2(slices.All(flatDisk), 0, func(acc, i, fileBlock int) int {
 		if fileBlock == -1 {
-			continue
+			return acc
 		}
-		sum += i * fileBlock
-	}
-
-	return sum
+		return acc + i*fileBlock
+	})
 }
 
 func PrintDisk(disk []*Block) {
