@@ -26,12 +26,9 @@ func (*Day1) Part1(r io.Reader) int {
 	slices.Sort(leftList)
 	slices.Sort(rightList)
 
-	sum := 0
-	for l, r := range its.Zip(slices.Values(leftList), slices.Values(rightList)) {
-		distance := utils.IntAbs(l, r)
-		sum += distance
-	}
-	return sum
+	return its.Reduce2(its.Zip(slices.Values(leftList), slices.Values(rightList)), 0, func(acc, l, r int) int {
+		return acc + utils.IntAbs(l, r)
+	})
 }
 
 func (*Day1) Part2(r io.Reader) int {
@@ -49,11 +46,10 @@ func (*Day1) Part2(r io.Reader) int {
 		}
 	}
 
-	sum := 0
-	for _, v := range leftList {
+	return its.Reduce(slices.Values(leftList), 0, func(acc, v int) int {
 		if c, ok := rightMap[v]; ok {
-			sum += c * v
+			return acc + c*v
 		}
-	}
-	return sum
+		return acc
+	})
 }
