@@ -4,7 +4,6 @@ import (
 	"aoc-lib/aoc"
 	"aoc-lib/map2d"
 	"aoc-lib/slices"
-	"fmt"
 	"io"
 )
 
@@ -26,12 +25,7 @@ func walkMap(fields *map2d.CellMap[map2d.Cell], currPos map2d.Vector2, missingNu
 		return 0
 	}
 
-	// var test string
-	// fmt.Scanln("%s", &test)
 	if len(missingNumbers) == 1 {
-		if nineSet.Has(currPos) {
-			return 0
-		}
 		nineSet.Set(currPos)
 		return 1
 	}
@@ -61,13 +55,29 @@ func (*Day10) Part1(r io.Reader) int {
 	var count int
 	for _, p := range startingPoints {
 		nineSet := slices.NewSet[map2d.Vector2]()
-		count += walkMap(fields, p, allNumbers, nineSet)
+		walkMap(fields, p, allNumbers, nineSet)
+		count += len(nineSet)
 	}
 
 	return count
 }
 
 func (*Day10) Part2(r io.Reader) int {
-	fmt.Println("Part2 not implemented")
-	return -1
+	fields := map2d.NewCellMap(r, func(x, y int, value byte) map2d.Cell { return map2d.Cell{X: x, Y: y, Value: value - '0'} })
+
+	startingPoints := make([]map2d.Vector2, 0)
+
+	for cell := range fields.Iter() {
+		if cell.Value == 0 {
+			startingPoints = append(startingPoints, cell.ExtractCoords())
+		}
+	}
+
+	var count int
+	for _, p := range startingPoints {
+		nineSet := slices.NewSet[map2d.Vector2]()
+		count += walkMap(fields, p, allNumbers, nineSet)
+	}
+
+	return count
 }
