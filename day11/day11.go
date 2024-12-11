@@ -78,31 +78,76 @@ func (d *DoubleLinkedList) InsertBefore(node *Node, after *Node) {
 func (*Day11) Part1(r io.Reader) int {
 	numbers := its.MapSlice(strings.Fields(string(utils.Must(io.ReadAll(r)))), utils.MapToInt)
 	fmt.Println(numbers)
-	dll := NewDLLFromValues(numbers...)
+	// dll := NewDLLFromValues(numbers...)
 
 	for range 25 {
-		for node := range dll.Iter() {
-			if node.value == 0 {
-				node.value = 1
+		newSlice := make([]int, 0, len(numbers)*2)
+
+		for _, v := range numbers {
+			if v == 0 {
+				newSlice = append(newSlice, 1)
 				continue
 			}
-			numString := strconv.Itoa(node.value)
+			numString := strconv.Itoa(v)
 			if len(numString)%2 == 0 {
 				firstHalf := utils.MapToInt(numString[:len(numString)/2])
 				secondHalf := utils.MapToInt(numString[len(numString)/2:])
-				newNode := &Node{value: firstHalf}
-				node.value = secondHalf
-				dll.InsertBefore(newNode, node)
+				newSlice = append(newSlice, firstHalf)
+				newSlice = append(newSlice, secondHalf)
 				continue
 			}
-			node.value *= 2024
+			newSlice = append(newSlice, v*2024)
 		}
+
+		numbers = newSlice
 	}
 
-	return dll.size
+	return len(numbers)
 }
 
 func (*Day11) Part2(r io.Reader) int {
-	fmt.Println("Part2 not implemented")
-	return -1
+	numbers := its.MapSlice(strings.Fields(string(utils.Must(io.ReadAll(r)))), utils.MapToInt)
+	fmt.Println(numbers)
+	// dll := NewDLLFromValues(numbers...)
+
+	for range 75 {
+		newSlice := make([]int, 0, len(numbers)*2)
+
+		for _, v := range numbers {
+			if v == 0 {
+				newSlice = append(newSlice, 1)
+				continue
+			}
+			numString := strconv.Itoa(v)
+			if len(numString)%2 == 0 {
+				firstHalf := utils.MapToInt(numString[:len(numString)/2])
+				secondHalf := utils.MapToInt(numString[len(numString)/2:])
+				newSlice = append(newSlice, firstHalf)
+				newSlice = append(newSlice, secondHalf)
+				continue
+			}
+			newSlice = append(newSlice, v*2024)
+		}
+
+		numbers = newSlice
+
+		// for node := range dll.Iter() {
+		// 	if node.value == 0 {
+		// 		node.value = 1
+		// 		continue
+		// 	}
+		// 	numString := strconv.Itoa(node.value)
+		// 	if len(numString)%2 == 0 {
+		// 		firstHalf := utils.MapToInt(numString[:len(numString)/2])
+		// 		secondHalf := utils.MapToInt(numString[len(numString)/2:])
+		// 		newNode := &Node{value: firstHalf}
+		// 		node.value = secondHalf
+		// 		dll.InsertBefore(newNode, node)
+		// 		continue
+		// 	}
+		// 	node.value *= 2024
+		// }
+	}
+
+	return len(numbers)
 }
