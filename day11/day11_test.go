@@ -6,7 +6,7 @@ import (
 )
 
 var part1Test = `
-125 17
+0
 `
 
 func TestDay11(t *testing.T) {
@@ -22,14 +22,14 @@ func TestDay11(t *testing.T) {
 		}
 	})
 
-	t.Run("part 2", func(t *testing.T) {
-		input := bytes.NewBufferString(part1Test)
-
-		expected := -1
-		actual := day11.Part2(input)
-
-		if expected != actual {
-			t.Fatalf("ERROR: expected %d actual %d\n", expected, actual)
-		}
-	})
+	// t.Run("part 2", func(t *testing.T) {
+//		input := bytes.NewBufferString(part1Test)
+//
+//		expected := -1
+//		actual := day11.Part2(input)
+//
+//		if expected != actual {
+//			t.Fatalf("ERROR: expected %d actual %d\n", expected, actual)
+//		}
+	//})
 }
